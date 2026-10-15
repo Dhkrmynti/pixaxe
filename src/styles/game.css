@@ -1,0 +1,368 @@
+/*
+ * Pixaxe, as a game client. The page is a world you play: a title screen with the floating island,
+ * then menu screens over a dark dirt backdrop (the scoreboard, the furnace, the advancements, the
+ * inventory, the chest) and a hardcore ending. A HUD stays on screen the whole time: one heart,
+ * the XP bar (fees smelting) and the hotbar that is the navigation.
+ * Light grey GUI windows with white and dark bevels; dark translucent overlays for lists and tooltips.
+ * Pixelify Sans for everything said, VT323 for everything counted or labelled.
+ */
+
+:root {
+  --sky: #9ccfee;
+  --sky-2: #c4e4f7;
+  --grass: #5fa041;
+  --dirt: #86593a;
+  --stone: #7d7d84;
+  --stone-bg: #3c3c43;
+  --deep: #26262d;
+  --cave: #1b1b21;
+  --bedrock: #0f0f12;
+  --ink: #16161a;
+  --text: #f1ede2;
+  --muted: #b3b1ab;
+  --paper: #efe6d2;
+  --paper-2: #f8f2e3;
+  --paper-ink: #2a2118;
+  --diamond: #4fe0d4;
+  --gold: #f2c230;
+  --gold-d: #c4931a;
+  --lava: #ff6a1a;
+  --red: #e5483a;
+  --ok: #6fd36a;
+  --plank: #a87c4a;
+  --say: "Pixelify Sans", "Trebuchet MS", sans-serif;
+  --type: "VT323", "Courier New", monospace;
+  --head: 56px;
+  --hud: 128px;
+  --gui: #c6c6c6;
+  --gui-ink: #3f3f3f;
+  --slot: #8b8b8b;
+  --xp: #7fe14b;
+  --gutter: clamp(16px, 4.4vw, 64px);
+  /* a block's edges: light on the top left, dark on the bottom right */
+  --bevel: inset 4px 4px 0 rgba(255, 255, 255, 0.22), inset -4px -4px 0 rgba(0, 0, 0, 0.3);
+  --bevel-in: inset 4px 4px 0 rgba(0, 0, 0, 0.35), inset -4px -4px 0 rgba(255, 255, 255, 0.12);
+  /* the operator page reads these names */
+  --sign: var(--say);
+  --mono: var(--type);
+  --yuzu: var(--gold);
+  --coal: var(--bedrock);
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+body {
+  margin: 0;
+  background: var(--cave);
+  color: var(--text);
+  font: 400 18px/1.5 var(--say);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+h1,
+h2,
+h3,
+p,
+ol,
+ul,
+dl,
+dd {
+  margin: 0;
+}
+ol,
+ul {
+  padding: 0;
+  list-style: none;
+}
+a {
+  color: inherit;
+}
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+svg {
+  image-rendering: pixelated;
+}
+::selection {
+  background: var(--gold);
+  color: var(--ink);
+}
+:focus-visible {
+  outline: 4px solid var(--diamond);
+  outline-offset: 3px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.num {
+  font-family: var(--type);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.22em;
+  line-height: 1.1;
+}
+.game {
+  overflow-x: clip;
+}
+
+/* ───────── shared ───────── */
+.wrap {
+  position: relative;
+  width: min(1140px, 100% - 2 * var(--gutter));
+  margin-inline: auto;
+}
+.sec {
+  position: relative;
+  padding: clamp(64px, 9vw, 128px) 0;
+}
+.sec__head {
+  display: grid;
+  gap: 12px;
+  margin-bottom: clamp(28px, 4vw, 52px);
+  max-width: 760px;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gold);
+  font-size: 22px;
+}
+.eyebrow::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  box-shadow: inset -3px -3px 0 rgba(0, 0, 0, 0.3);
+}
+.h2 {
+  font: 700 clamp(34px, 4.6vw, 60px) / 1.02 var(--say);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.h3 {
+  margin: clamp(36px, 5vw, 60px) 0 16px;
+  font: 700 clamp(24px, 2.6vw, 32px) / 1.1 var(--say);
+}
+.deck {
+  max-width: 62ch;
+  color: var(--muted);
+}
+.help {
+  font-size: 15px;
+  color: var(--muted);
+}
+.errline {
+  font-size: 15px;
+  color: var(--red);
+  font-weight: 500;
+}
+.okline {
+  font-size: 15px;
+  color: var(--ok);
+  font-weight: 500;
+}
+.demo {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 6px;
+  background: var(--red);
+  color: #fff;
+  font-style: normal;
+  font-size: 0.85em;
+}
+
+/* the textured grounds: a block texture under a flat wash so the text on top stays readable */
+/* ───────── buttons ───────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 52px;
+  padding: 0 22px 2px;
+  border: 4px solid var(--ink);
+  background: var(--gold);
+  box-shadow: var(--bevel);
+  color: var(--ink);
+  font: 400 26px/1 var(--type);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.btn svg {
+  font-size: 0.8em;
+}
+.btn:hover {
+  background: #ffd54f;
+}
+.btn:active {
+  box-shadow: var(--bevel-in);
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.btn.is-small {
+  height: 42px;
+  padding: 0 14px 2px;
+  font-size: 22px;
+}
+.btn.is-line {
+  background: #c9c9d2;
+}
+.btn.is-line:hover {
+  background: #e0e0e6;
+}
+.btn.is-quiet {
+  height: auto;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.btn.is-quiet:hover {
+  color: var(--gold);
+}
+.btn.is-waiting,
+.btn.is-waiting:hover {
+  background: #6d6d76;
+  color: #d7d7dc;
+  cursor: default;
+}
+.btn__short {
+  display: none;
+}
+.ca {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  max-width: 100%;
+  padding: 0 14px;
+  border: 4px solid var(--ink);
+  background: var(--cave);
+  box-shadow: var(--bevel-in);
+  color: var(--text);
+  cursor: pointer;
+}
+.ca:disabled {
+  cursor: default;
+}
+.ca__k {
+  font: 400 22px/1 var(--type);
+  color: var(--gold);
+}
+.ca__v {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.ca__a {
+  display: grid;
+  color: var(--muted);
+}
+.connect {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 12px 2px;
+  border: 4px solid var(--ink);
+  background: #c9c9d2;
+  box-shadow: var(--bevel);
+  color: var(--ink);
+  cursor: pointer;
+}
+.connect:hover {
+  background: #e0e0e6;
+}
+.connect__label {
+  font-size: 22px;
+}
+.connect__dot {
+  width: 10px;
+  height: 10px;
+  background: #3fae3a;
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+/* how a holder is shown */
+.portrait,
+.xface {
+  flex: none;
+  border: 3px solid var(--ink);
+  background: var(--stone);
+}
+.xface {
+  object-fit: cover;
+}
+.xcheck {
+  flex: none;
+}
+.xcheck.is-blue {
+  color: #1d9bf0;
+}
+.xcheck.is-business {
+  color: #e8b829;
+}
+.xcheck.is-government {
+  color: #829aab;
+}
+.xlink {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  color: inherit;
+}
+.xlink:hover {
+  color: var(--diamond);
+}
+.who {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.who__name {
+  all: unset;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  font-weight: 500;
+}
+.who__name:hover {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.who__name:focus-visible {
+  outline: 4px solid var(--diamond);
+  outline-offset: 2px;
+}
+
